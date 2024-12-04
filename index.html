@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bulk Delete Messages Helper</title>
+    <style>
+        body {
+            margin: 20px;
+            background-color: #08ffff;
+        }
+        #output {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            border: 2px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Discord Bulk Delete Messages Helper</h1>
+    <p>Select the folder containing your Discord messages:</p>
+    <p>The Counter Updates every time a file is finished.</p>
+    <p>Depending on the system and the amount of messages, it might be stuck for a few minutes.</p>
+    <p>You will know when it finishes!</p>
+    <p>please chose the folder that contains the Chat-Channel folders. Example discord\messages\messages </p>
+    <p>Mandatory: <a href="https://support.discord.com/hc/en-us/articles/360004027692-Requesting-a-Copy-of-your-Data"> Request your Data!</a></p>
+    <input type="file" id="folderInput" webkitdirectory directory>
+    <button id="processBtn">Process Messages</button>
+    <div id="output"></div>
+    <button id="downloadBtn" style="display: none;">Download Output</button>
+
+    <p> All finished: <a href="https://support.discord.com/hc/en-us/requests/new?ticket_form_id=4750383925911"> Create a Ticket! </a></p>
+    <p> Note: This is only tested by me in the EU. No idea if it works for 'outsiders'. Worth a shot tho.</p>
+    <textarea>Hello,
+
+I am writing to formally request the deletion of all my messages listed in the attached text document, in accordance with the GDPR. As a resident of Germany, I am exercising my right to data privacy and protection. The attached document contains a list of messages in the required format, as the volume is too large to include within the body of this email.
+        
+I understand that context preservation may be a concern; however, my right to privacy is of paramount importance. Unfortunately, Discord appears to lack comprehensive tools for users to manage their data effectively at this scale.
+        
+Thank you very much for your attention to this matter, and I appreciate your assistance in helping me secure my privacy.
+        
+Please let me know once the deletion process is complete, as I would like to request another data package to verify that all listed messages have been deleted.
+        
+Best regards, </textarea>
+    <p> Message date: 01/Dec/24</p>
+    <p> Hi there, <br>
+ 
+        Thank you for your continued patience. <br>
+         
+        The deletion process for the message IDs you provided is now complete. <br>
+         
+        If any of the provided message IDs were sent by another user, they would not have been deleted. Additionally, if any of the message IDs were incorrect or missing a number, they would not have been processed. <br>
+         
+        If you locate additional message IDs containing personally identifiable information (PII) that you would like to request for deletion, please submit a new ticket with the relevant details, and our team will review them accordingly. <br>
+        
+        Finally, please note that we will be expecting a CSV format starting Dec 1, 2024 and will be rejecting any other file formats after that date. <br>
+         
+        We appreciate your understanding in this matter. <br>
+         
+        Sincerely, <br>
+        Discord Privacy Team </p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    <script>
+        const folderInput = document.getElementById('folderInput');
+        const processBtn = document.getElementById('processBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const outputDiv = document.getElementById('output');
+        var messageCounter = 0;
+
+        let result = '';
+
+        processBtn.addEventListener('click', async () => {
+            if (!folderInput.files.length) {
+                alert('Please select a folder first.');
+                return;
+            }
+
+            
+            const files = Array.from(folderInput.files); // creates an array of all files found
+            const filteredFiles = files.filter(file => file.name === 'messages.json'); // filters all files to match messagses.json only
+            const messageData = []; // array that all messageIDs will get pushed into
+            outputDiv.textContent = "Nothind to display here";
+            for (const file of filteredFiles) { // this is just a relatively messy loop to get down to the json file and read the data out of it.
+                var folderPath = file.webkitRelativePath.split('/');
+                var folderName = folderPath[0];
+                if (file.name === 'messages.json') {
+                    const folderName = file.webkitRelativePath.split('/')[0];
+                    const channelId = folderName;
+
+                    const text = await file.text();
+                    const messages = JSON.parse(`[${text.split('}{').join('},{')}]`); 
+                    for (var entry in messages){
+                        
+                        for (var entryDeep in messages[entry]){
+                            console.log("F: ",messages[entry]);
+                            for (var entryMegaDeep in messages[entry][entryDeep]){
+                                messageData.push(messages[entry][entryDeep][entryMegaDeep]);
+                                messageCounter++;
+                                break // dont judge me i dont know how else to do it
+                            }
+                            outputDiv.textContent = messageCounter;
+                        }
+                    }
+                    
+                    ;
+                }
+            }
+                result = '';
+                result += messageData;
+
+                outputDiv.textContent = "Done!";
+                downloadBtn.style.display = 'inline-block';
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const blob = new Blob([result], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'discord_messages.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+        
+    </script>
+</body>
+</html>
