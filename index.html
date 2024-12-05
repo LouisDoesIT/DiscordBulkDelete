@@ -83,7 +83,10 @@ Best regards, </textarea>
         const processBtn = document.getElementById('processBtn');
         const downloadBtn = document.getElementById('downloadBtn');
         const outputDiv = document.getElementById('output');
+        let csvContent = "channel_id, message_id\n";
         var messageCounter = 0;
+        var runCounter = 0;
+        var lastChannel;
 
         let result = '';
 
@@ -97,41 +100,58 @@ Best regards, </textarea>
             const files = Array.from(folderInput.files); // creates an array of all files found
             const filteredFiles = files.filter(file => file.name === 'messages.json'); // filters all files to match messagses.json only
             const messageData = []; // array that all messageIDs will get pushed into
+            const channelData = []; // array that all channelIDs will get pushed into
             outputDiv.textContent = "Nothind to display here";
             for (const file of filteredFiles) { // this is just a relatively messy loop to get down to the json file and read the data out of it.
                 var folderPath = file.webkitRelativePath.split('/');
-                var folderName = folderPath[0];
+                var folderName = folderPath[1];
+                console.log("folderPath: ",folderPath);
+                console.log("folder name: ",folderName.substring(1))
+                console.log("--");
                 if (file.name === 'messages.json') {
-                    const folderName = file.webkitRelativePath.split('/')[0];
-                    const channelId = folderName;
 
                     const text = await file.text();
                     const messages = JSON.parse(`[${text.split('}{').join('},{')}]`); 
                     for (var entry in messages){
                         
                         for (var entryDeep in messages[entry]){
-                            console.log("F: ",messages[entry]);
                             for (var entryMegaDeep in messages[entry][entryDeep]){
+                                const channelId = folderName;
+                                console.log("M: ",messages[entry][entryDeep][entryMegaDeep]);
+                                console.log("yolo");
                                 messageData.push(messages[entry][entryDeep][entryMegaDeep]);
+                                channelData.push(folderName)
                                 messageCounter++;
+                                runCounter++;
                                 break // dont judge me i dont know how else to do it
                             }
+                            console.log(messageCounter)
                             outputDiv.textContent = messageCounter;
                         }
                     }
                     
                     ;
                 }
+                console.log("Channels: ", channelData.length)
+                console.log("Messages :", messageData.length)
             }
                 result = '';
                 result += messageData;
 
                 outputDiv.textContent = "Done!";
                 downloadBtn.style.display = 'inline-block';
-        });
+        
+        for (let i = 0; i < channelData.length; i++) {
+            csvContent += `${channelData[i]},${messageData[i]}\n`; 
+        }
+            
+        
+            });
+
+        
 
         downloadBtn.addEventListener('click', () => {
-            const blob = new Blob([result], { type: 'text/csv' });
+            const blob = new Blob([csvContent], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
